@@ -1,0 +1,62 @@
+name: Makefile CI
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # ubuntu-latest doesn't seem to currently play well with the latest version of setup-fortran
+        os: [ubuntu-24.04, macos-latest]
+        toolchain:
+          - { compiler: gcc, version: "latest" }
+          # - { compiler: intel, version: "2025.0" }
+          # - { compiler: intel-classic, version: "2021.10" }
+          # - { compiler: nvidia-hpc, version: "latest" }
+          # - { compiler: lfortran, version: "0.45.0" }
+          # - { compiler: aocc, version: "5.1.0" }
+        exclude:
+          - os: macos-latest
+            toolchain: { compiler: intel }
+          - os: macos-latest
+            toolchain: { compiler: intel-classic }
+          - os: macos-latest
+            toolchain: { compiler: nvidia-hpc }
+          - os: macos-latest
+            toolchain: { compiler: aocc }
+
+    steps:
+      - uses: fortran-lang/setup-fortran@v1.10.0
+        id: setup-fortran
+        with:
+          compiler: ${{ matrix.toolchain.compiler }}
+          version: ${{ matrix.toolchain.version }}
+
+      - uses: actions/checkout@v7
+
+      - name: Setup Fortran
+        uses: fortran-lang/setup-fortran@v1.10.0
+
+      - name: Install dependencies (Ubuntu)
+        if: ${{ contains(matrix.os, 'ubuntu') }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y liblapack-dev
+
+      - name: Install dependencies (MacOS)
+        if: ${{ contains(matrix.os, 'macos') }}
+        run: |
+          echo "LDFLAGS=-L$(brew --prefix openblas)/lib" >> $GITHUB_ENV
+          echo "CPPFLAGS=-I$(brew --prefix openblas)/include" >> $GITHUB_ENV
+
+      - name: Install atomsk
+        run: cd src && make -f Makefile.static atomsk
+
+      - name: Upload atomsk binary as a build artifact
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: atomsk-${{ matrix.os }}-${{ matrix.toolchain.compiler }}
+          path: src/atomsk
