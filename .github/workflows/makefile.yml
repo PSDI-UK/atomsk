@@ -49,6 +49,9 @@ jobs:
       - name: Install dependencies (MacOS)
         if: ${{ contains(matrix.os, 'macos') }}
         run: |
+          brew install openblas
+          brew install lapack
+          echo "PKG_CONFIG_PATH=$(brew --prefix openblas)/lib/pkgconfig" >> $GITHUB_ENV
           echo "LDFLAGS=-L$(brew --prefix openblas)/lib" >> $GITHUB_ENV
           echo "CPPFLAGS=-I$(brew --prefix openblas)/include" >> $GITHUB_ENV
 
