@@ -52,8 +52,11 @@ jobs:
           echo "LDFLAGS=-L$(brew --prefix openblas)/lib" >> $GITHUB_ENV
           echo "CPPFLAGS=-I$(brew --prefix openblas)/include" >> $GITHUB_ENV
 
-      - name: Install atomsk
+      - name: Install atomsk (Ubuntu)
         run: cd src && make -f Makefile.static atomsk
+
+      - name: Install atomsk (MacOS)
+        run: cd src && make -f Makefile.macos atomsk
 
       - name: Upload atomsk binary as a build artifact
         uses: actions/upload-artifact@v7.0.2
