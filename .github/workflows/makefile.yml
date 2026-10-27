@@ -44,7 +44,7 @@ jobs:
         if: ${{ contains(matrix.os, 'ubuntu') }}
         run: |
           sudo apt-get update
-          sudo apt-get install -y liblapack-dev
+          sudo apt-get install -y libblas-dev liblapack-dev
 
       - name: Install dependencies (MacOS)
         if: ${{ contains(matrix.os, 'macos') }}
@@ -61,7 +61,9 @@ jobs:
 
       - name: Install atomsk (MacOS)
         if: ${{ contains(matrix.os, 'macos') }}
-        run: cd src && make -f Makefile.macos atomsk
+        # There is a dedicated Makefile for MacOS, but it seems to be bugged and the normal one works better
+        # run: cd src && make -f Makefile.macos atomsk
+        run: cd src && make -f Makefile atomsk
 
       - name: Upload atomsk binary as a build artifact
         uses: actions/upload-artifact@v7.0.2
